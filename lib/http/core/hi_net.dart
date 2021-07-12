@@ -48,7 +48,6 @@ class HiNet {
       }
     }
   }
-
   Future<dynamic> send<T>(BaseRequest request) async {
     printLog("url : ${request.url()}");
     // HiNetAdapter adapter = MockAdapter();

@@ -3,7 +3,10 @@ import 'package:bili/http/core/hi_error.dart';
 import 'package:bili/http/core/hi_net.dart';
 import 'package:bili/http/dao/login_dao.dart';
 import 'package:bili/http/request/test_request.dart';
+import 'package:bili/page/registration_page.dart';
 import 'package:flutter/material.dart';
+
+import 'util/color.dart';
 
 void main() {
   runApp(MyApp());
@@ -16,18 +19,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
+        primarySwatch: white,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: RegistrationPage(),
     );
   }
 }
@@ -135,8 +129,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void testLogin() async {
-    // var result = await LoginDao.registration('frc', '123', '12345', '111');
-    var result = await LoginDao.login('frc', '123');
+    var result = await LoginDao.registration('frc', '123', '12345', '111');
+    // var result = await LoginDao.login('frc', '123');
     print(result);
   }
 }
