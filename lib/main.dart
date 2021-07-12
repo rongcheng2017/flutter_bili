@@ -1,6 +1,7 @@
 import 'package:bili/db/HiCache.dart';
 import 'package:bili/http/core/hi_error.dart';
 import 'package:bili/http/core/hi_net.dart';
+import 'package:bili/http/dao/login_dao.dart';
 import 'package:bili/http/request/test_request.dart';
 import 'package:flutter/material.dart';
 
@@ -59,7 +60,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _incrementCounter() async {
-    testDb();
+    testLogin();
+    // testDb();
     // TestRequest testRequest = TestRequest();
     // testRequest.add("requestPrams", "bb");
     // try {
@@ -130,5 +132,11 @@ class _MyHomePageState extends State<MyHomePage> {
     // HiCache.getInstance().setString("aa", "1234");
     var value = HiCache.getInstance().get("aa");
     print("db is : $value");
+  }
+
+  void testLogin() async {
+    // var result = await LoginDao.registration('frc', '123', '12345', '111');
+    var result = await LoginDao.login('frc', '123');
+    print(result);
   }
 }
