@@ -3,6 +3,7 @@ import 'package:bili/http/core/hi_error.dart';
 import 'package:bili/http/core/hi_net.dart';
 import 'package:bili/http/dao/login_dao.dart';
 import 'package:bili/http/request/test_request.dart';
+import 'package:bili/page/login_page.dart';
 import 'package:bili/page/registration_page.dart';
 import 'package:flutter/material.dart';
 
@@ -16,12 +17,14 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    HiCache.preInit();
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: white,
       ),
       home: RegistrationPage(),
+      // home: LoginPage(),
     );
   }
 }
