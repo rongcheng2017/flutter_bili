@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 /// 作者：frc
 /// 描述：自定义顶部appbar
 
-appBar(String title, String rightTitle, VoidCallback rightButtonClick) {
+appBar(String title, String rightTitle, VoidCallback? rightButtonClick) {
   return AppBar(
     centerTitle: false,
     titleSpacing: 0,
