@@ -59,16 +59,28 @@ class BiliRouteDelegate extends RouterDelegate<BiliRoutePath>
     with ChangeNotifier, PopNavigatorRouterDelegateMixin {
   final GlobalKey<NavigatorState> navigatorKey;
 
-  BiliRouteDelegate() : navigatorKey = GlobalKey<NavigatorState>();
+  BiliRouteDelegate() : navigatorKey = GlobalKey<NavigatorState>() {
+    //实现跳转逻辑
+    HiNavigator.getInstance().registerRouteJump(
+        RouteJumpListener(onJumpTo: (RouteStatus routeStatus, {Map? args}) {
+      _routeStatus = routeStatus;
+      if (routeStatus == RouteStatus.detail) {
+        this.videoModel = args?['videoMo'];
+      }
+      notifyListeners();
+    }));
+  }
 
   VideoModel? videoModel;
   RouteStatus _routeStatus = RouteStatus.home;
   List<MaterialPage> pages = [];
 
   RouteStatus get routeStatus {
-    if (_routeStatus != RouteStatus.registration && !hasLogin) {
-      return _routeStatus = RouteStatus.login;
-    } else if (videoModel != null) {
+    // if (_routeStatus != RouteStatus.registration && !hasLogin) {
+    //   return _routeStatus = RouteStatus.login;
+    // } else
+    //
+    if (videoModel != null) {
       return _routeStatus = RouteStatus.detail;
     } else {
       return _routeStatus;
@@ -90,34 +102,15 @@ class BiliRouteDelegate extends RouterDelegate<BiliRoutePath>
     if (routeStatus == RouteStatus.home) {
       //跳转到首页时，将栈中其他页面进行出栈，以为首页不可回退。
       pages.clear();
-      page = pageWrap(HomePage(
-        onJumpToDetail: (videoModel) {
-          this.videoModel = videoModel;
-          notifyListeners();
-        },
-      ));
+      page = pageWrap(HomePage());
     } else if (routeStatus == RouteStatus.detail) {
       page = pageWrap(VideoDetailPage(
         videoModel: videoModel,
       ));
     } else if (routeStatus == RouteStatus.registration) {
-      page = pageWrap(RegistrationPage(
-        onJumpToLogin: () {
-          _routeStatus = RouteStatus.login;
-          notifyListeners();
-        },
-      ));
+      page = pageWrap(RegistrationPage());
     } else if (routeStatus == RouteStatus.login) {
-      page = pageWrap(LoginPage(
-        onJumpRegistrationPage: () {
-          _routeStatus = RouteStatus.registration;
-          notifyListeners();
-        },
-        onSuccess: () {
-          _routeStatus = RouteStatus.home;
-          notifyListeners();
-        },
-      ));
+      page = pageWrap(LoginPage());
     }
 
     tempPages = [...tempPages, page];

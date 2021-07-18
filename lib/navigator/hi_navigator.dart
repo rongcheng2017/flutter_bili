@@ -49,3 +49,43 @@ int getPageIndex(List<MaterialPage> pages, RouteStatus routeStatus) {
   }
   return -1;
 }
+
+///监听路由页面跳转
+///感知当前页面是否压后台
+class HiNavigator extends _RouteJumpListener {
+  HiNavigator._();
+
+  static HiNavigator? _instance;
+  RouteJumpListener? _routeJumpListener;
+
+  static HiNavigator getInstance() {
+    if (_instance == null) {
+      _instance = HiNavigator._();
+    }
+
+    return _instance!;
+  }
+
+  void registerRouteJump(RouteJumpListener routeJumpListener) {
+    this._routeJumpListener = routeJumpListener;
+  }
+
+  @override
+  void onJumpTo(RouteStatus routeStatus, {Map? args}) {
+    _routeJumpListener?.onJumpTo?.call(routeStatus, args: args);
+  }
+}
+
+///抽象类提供HiNavigator实现
+abstract class _RouteJumpListener {
+  void onJumpTo(RouteStatus routeStatus, {Map args});
+}
+
+typedef OnJumpTo = void Function(RouteStatus routeStatus, {Map? args});
+
+///定义路由跳转逻辑要实现的功能
+class RouteJumpListener {
+  final OnJumpTo? onJumpTo;
+
+  RouteJumpListener({this.onJumpTo});
+}

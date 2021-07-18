@@ -1,5 +1,6 @@
 import 'package:bili/http/core/hi_error.dart';
 import 'package:bili/http/dao/login_dao.dart';
+import 'package:bili/navigator/hi_navigator.dart';
 import 'package:bili/util/string_util.dart';
 import 'package:bili/util/toast.dart';
 import 'package:bili/widget/appbar.dart';
@@ -13,11 +14,7 @@ import 'package:flutter/material.dart';
 /// 描述：登录页面
 
 class LoginPage extends StatefulWidget {
-  final VoidCallback? onJumpRegistrationPage;
-  final VoidCallback? onSuccess;
-
-  const LoginPage({Key? key, this.onJumpRegistrationPage, this.onSuccess})
-      : super(key: key);
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -35,7 +32,9 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar('密码登录', '注册', widget.onJumpRegistrationPage),
+      appBar: appBar('密码登录', '注册', () {
+        HiNavigator.getInstance().onJumpTo(RouteStatus.registration);
+      }),
       body: Container(
         child: ListView(
           children: [
@@ -90,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
       print(result);
       if (result['code'] == 0) {
         showToast('登录成功');
-        widget.onSuccess?.call();
+        HiNavigator.getInstance().onJumpTo(RouteStatus.home);
       } else {
         showWarnToast(result['message']);
       }
