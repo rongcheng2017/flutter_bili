@@ -1,6 +1,7 @@
 import 'package:bili/db/HiCache.dart';
 import 'package:bili/http/dao/login_dao.dart';
 import 'package:bili/model/video_model.dart';
+import 'package:bili/navigator/bottom_navigator.dart';
 import 'package:bili/page/login_page.dart';
 import 'package:bili/page/registration_page.dart';
 import 'package:bili/page/video_detail_page.dart';
@@ -102,7 +103,7 @@ class BiliRouteDelegate extends RouterDelegate<BiliRoutePath>
     if (routeStatus == RouteStatus.home) {
       //跳转到首页时，将栈中其他页面进行出栈，以为首页不可回退。
       pages.clear();
-      page = pageWrap(HomePage());
+      page = pageWrap(BottomNavigator());
     } else if (routeStatus == RouteStatus.detail) {
       page = pageWrap(VideoDetailPage(
         videoModel: videoModel,
