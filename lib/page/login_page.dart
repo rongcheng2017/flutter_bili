@@ -13,7 +13,11 @@ import 'package:flutter/material.dart';
 /// 描述：登录页面
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  final VoidCallback? onJumpRegistrationPage;
+  final VoidCallback? onSuccess;
+
+  const LoginPage({Key? key, this.onJumpRegistrationPage, this.onSuccess})
+      : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -31,7 +35,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: appBar('密码登录', '注册', () {}),
+      appBar: appBar('密码登录', '注册', widget.onJumpRegistrationPage),
       body: Container(
         child: ListView(
           children: [
@@ -86,6 +90,7 @@ class _LoginPageState extends State<LoginPage> {
       print(result);
       if (result['code'] == 0) {
         showToast('登录成功');
+        widget.onSuccess?.call();
       } else {
         showWarnToast(result['message']);
       }

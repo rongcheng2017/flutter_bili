@@ -1,139 +1,178 @@
 import 'package:bili/db/HiCache.dart';
-import 'package:bili/http/core/hi_error.dart';
-import 'package:bili/http/core/hi_net.dart';
 import 'package:bili/http/dao/login_dao.dart';
-import 'package:bili/http/request/test_request.dart';
+import 'package:bili/model/video_model.dart';
 import 'package:bili/page/login_page.dart';
 import 'package:bili/page/registration_page.dart';
+import 'package:bili/page/video_detail_page.dart';
+import 'package:bili/util/color.dart';
+import 'package:bili/util/toast.dart';
 import 'package:flutter/material.dart';
 
-import 'util/color.dart';
+import 'navigator/hi_navigator.dart';
+import 'page/home_page.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(BiliApp());
 }
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class BiliApp extends StatefulWidget {
+  const BiliApp({Key? key}) : super(key: key);
+
   @override
-  Widget build(BuildContext context) {
-    HiCache.preInit();
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: white,
-      ),
-      home: RegistrationPage(),
-      // home: LoginPage(),
-    );
-  }
+  _BiliAppState createState() => _BiliAppState();
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    HiCache.preInit();
-  }
-
-  void _incrementCounter() async {
-    testLogin();
-    // testDb();
-    // TestRequest testRequest = TestRequest();
-    // testRequest.add("requestPrams", "bb");
-    // try {
-    //   var result = await HiNet.getInstance().fire(testRequest);
-    //   print(result);
-    // } on NeedAuth catch (e) {
-    //   print(e);
-    // } on NeedLogin catch (e) {
-    //   print(e);
-    // } on HiNetError catch (e) {
-    //   print(e);
-    // }
-  }
+class _BiliAppState extends State<BiliApp> {
+  BiliRouteDelegate _routeDelegate = BiliRouteDelegate();
+  BiliRouteInformationParser _routeInformationParser =
+      BiliRouteInformationParser();
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+    return FutureBuilder<HiCache>(
+        //初始化
+        future: HiCache.preInit(),
+        builder: (BuildContext context, AsyncSnapshot<HiCache> snapshot) {
+          var widget = snapshot.connectionState == ConnectionState.done
+              ? Router(
+                  routerDelegate: _routeDelegate,
+                  routeInformationParser: _routeInformationParser,
+                  routeInformationProvider: PlatformRouteInformationProvider(
+                      initialRouteInformation: RouteInformation(location: "/")),
+                )
+              : Scaffold(
+                  body: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+          return MaterialApp(
+            home: widget,
+            theme: ThemeData(
+              primarySwatch: white,
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
+          );
+        });
+  }
+}
+
+class BiliRouteDelegate extends RouterDelegate<BiliRoutePath>
+    with ChangeNotifier, PopNavigatorRouterDelegateMixin {
+  final GlobalKey<NavigatorState> navigatorKey;
+
+  BiliRouteDelegate() : navigatorKey = GlobalKey<NavigatorState>();
+
+  VideoModel? videoModel;
+  RouteStatus _routeStatus = RouteStatus.home;
+  List<MaterialPage> pages = [];
+
+  RouteStatus get routeStatus {
+    if (_routeStatus != RouteStatus.registration && !hasLogin) {
+      return _routeStatus = RouteStatus.login;
+    } else if (videoModel != null) {
+      return _routeStatus = RouteStatus.detail;
+    } else {
+      return _routeStatus;
+    }
+  }
+
+  bool get hasLogin => LoginDao.getBoardingPass() != null;
+
+  @override
+  Widget build(BuildContext context) {
+    var index = getPageIndex(pages, routeStatus);
+    var tempPages = pages;
+    if (index != -1) {
+      //要打开的页面再栈中已经存在，则将该页面和它上面的所有页面进行出栈
+      //最好要求栈中只允许有一个同样的页面实例
+      tempPages = tempPages.sublist(0, index);
+    }
+    var page;
+    if (routeStatus == RouteStatus.home) {
+      //跳转到首页时，将栈中其他页面进行出栈，以为首页不可回退。
+      pages.clear();
+      page = pageWrap(HomePage(
+        onJumpToDetail: (videoModel) {
+          this.videoModel = videoModel;
+          notifyListeners();
+        },
+      ));
+    } else if (routeStatus == RouteStatus.detail) {
+      page = pageWrap(VideoDetailPage(
+        videoModel: videoModel,
+      ));
+    } else if (routeStatus == RouteStatus.registration) {
+      page = pageWrap(RegistrationPage(
+        onJumpToLogin: () {
+          _routeStatus = RouteStatus.login;
+          notifyListeners();
+        },
+      ));
+    } else if (routeStatus == RouteStatus.login) {
+      page = pageWrap(LoginPage(
+        onJumpRegistrationPage: () {
+          _routeStatus = RouteStatus.registration;
+          notifyListeners();
+        },
+        onSuccess: () {
+          _routeStatus = RouteStatus.home;
+          notifyListeners();
+        },
+      ));
+    }
+
+    tempPages = [...tempPages, page];
+
+    pages = tempPages;
+    return WillPopScope(
+      //android物理返回键
+      onWillPop: () async => !await navigatorKey.currentState!.maybePop(),
+      child: Navigator(
+        key: navigatorKey,
+        pages: pages,
+        onPopPage: (route, result) {
+          if (route.settings is MaterialPage) {
+            //登录页未登录返回拦截
+            if ((route.settings as MaterialPage).child is LoginPage) {
+              if (!hasLogin) {
+                showWarnToast("请先登录");
+                return false;
+              }
+            }
+          }
+          //控制能否返回上一页
+          if (!route.didPop(result)) {
+            return false;
+          }
+          pages.removeLast();
+          return true;
+        },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
-  void testDb() {
-    // HiCache.getInstance().setString("aa", "1234");
-    var value = HiCache.getInstance().get("aa");
-    print("db is : $value");
-  }
+  @override
+  Future<void> setNewRoutePath(BiliRoutePath configuration) async {}
+}
 
-  void testLogin() async {
-    var result = await LoginDao.registration('frc', '123', '12345', '111');
-    // var result = await LoginDao.login('frc', '123');
-    print(result);
+///可缺省，应用于web,持有RouteInformationProvider 提供的 RouteInformation
+class BiliRouteInformationParser extends RouteInformationParser<BiliRoutePath> {
+  @override
+  Future<BiliRoutePath> parseRouteInformation(
+      RouteInformation routeInformation) async {
+    final uri = Uri.parse(routeInformation.location!);
+    print('uri: $uri');
+    if (uri.pathSegments.length == 0) {
+      return BiliRoutePath.home();
+    }
+    return BiliRoutePath.detail();
   }
+}
+
+///定义路由数据,path
+class BiliRoutePath {
+  final String location;
+
+  BiliRoutePath.home() : location = "/";
+
+  BiliRoutePath.detail() : location = "/detail";
 }
