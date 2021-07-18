@@ -114,7 +114,8 @@ class BiliRouteDelegate extends RouterDelegate<BiliRoutePath>
     }
 
     tempPages = [...tempPages, page];
-
+    //通知路由发生变化
+    HiNavigator.getInstance().notify(tempPages, pages);
     pages = tempPages;
     return WillPopScope(
       //android物理返回键
@@ -136,7 +137,10 @@ class BiliRouteDelegate extends RouterDelegate<BiliRoutePath>
           if (!route.didPop(result)) {
             return false;
           }
+          var tempPages = [...pages];
           pages.removeLast();
+          //通知路由发生了变化
+          HiNavigator.getInstance().notify(pages, tempPages);
           return true;
         },
       ),

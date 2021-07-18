@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 /// 作者：frc
 /// 描述：
 
+typedef RouteChangeListener(RouteStatusInfo current, RouteStatusInfo? pre);
+
 ///创建路由页面
 pageWrap(Widget child) {
   return MaterialPage(key: ValueKey(child.hashCode), child: child);
@@ -58,6 +60,10 @@ class HiNavigator extends _RouteJumpListener {
   static HiNavigator? _instance;
   RouteJumpListener? _routeJumpListener;
 
+  List<RouteChangeListener> _listeners = [];
+
+  RouteStatusInfo? _current;
+
   static HiNavigator getInstance() {
     if (_instance == null) {
       _instance = HiNavigator._();
@@ -70,9 +76,37 @@ class HiNavigator extends _RouteJumpListener {
     this._routeJumpListener = routeJumpListener;
   }
 
+  void addListener(RouteChangeListener listener) {
+    if (!_listeners.contains(listener)) {
+      _listeners.add(listener);
+    }
+  }
+
+  void removeListener(RouteChangeListener listener) {
+    _listeners.remove(listener);
+  }
+
+  ///通知路由页面变化
+  void notify(List<MaterialPage> currentPages, List<MaterialPage> prePages) {
+    if (currentPages == prePages) return;
+    var current =
+        RouteStatusInfo(getStatus(currentPages.last), currentPages.last.child);
+    _notify(current);
+  }
+
   @override
   void onJumpTo(RouteStatus routeStatus, {Map? args}) {
     _routeJumpListener?.onJumpTo?.call(routeStatus, args: args);
+  }
+
+  void _notify(RouteStatusInfo current) {
+    print('hi_navigator:  current ${current.page}');
+    print('hi_navigator:  pre ${_current?.page}');
+
+    _listeners.forEach((listener) {
+      listener(current, _current);
+    });
+    _current = current;
   }
 }
 
